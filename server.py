@@ -8,8 +8,9 @@ class Server:
         self.server = ''
         self.port = 1234
         self.peers = peers
+        self.chats = ''
 
-        self.socket = socket.socket(socket.AF_INET, socket.SOCKSTREAM)
+        self.socket = socket(socket.AF_INET, socket.SOCKSTREAM)
         self.server_ip = socket.gethostbyname(self.server)
         self.bind()
 
@@ -46,15 +47,13 @@ class Server:
         while True:
             try:
                 data = pickle.loads(conn.recv(2048))
-                # process data
-                # ...
-                reply = 'reply'
+                self.chats = data
                 conn.send(pickle.dumps(reply))
+                if self.chats == data:
+                    self.chats = ''
             except Exception as err:
                 # if connection lost
                 print(err)
-                break
 
-
-    
-
+if __name__ == "__main__":
+    Server(int(input('No. of connections?: ')))

@@ -1,9 +1,13 @@
 import client
+import _thread
+
 class app:
 
     def __init__(self):
         self.username = self.getUsername()
         self.net = client.Client(self.username)
+        _thread.start_new_thread(self.session,())
+        self.active()
 
     def getUsername(self):
         print('''
@@ -19,6 +23,17 @@ class app:
         while not a:
             a = input('\t ->')
         return a
+    
+    def active(self):
+        while True:
+            x = f'[{self.username}]: '+input(f'[{self.username}]')
+            self.net.send(x)
+
+    def session(self):
+        while True:
+            R = self.net.receive()
+            if R is not None:
+                print(R)
 
 if __name__ == "__main__":
     app()
