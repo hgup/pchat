@@ -6,16 +6,22 @@ class Server:
 
     def __init__(self, peers):
         self.server = ''
-        self.port = 1234
+        self.port = 6666
         self.peers = peers
         self.chats = ''
 
-        self.socket = socket(socket.AF_INET, socket.SOCKSTREAM)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_ip = socket.gethostbyname(self.server)
         self.bind()
 
         self.socket.listen(self.peers)
         self.acceptRequest()
+
+    def bind(self):
+        try:
+            self.socket.bind((self.server, self.port))
+        except socket.error as err:
+            print(str(err))
 
     def acceptRequest(self):
         self.connections = []

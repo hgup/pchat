@@ -33,7 +33,7 @@ class app:
         while True:
             R = self.net.receive()
             if R is not None:
-                print(R)
+                print('lol',R)
 
 if __name__ == "__main__":
     app()
