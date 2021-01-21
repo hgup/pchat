@@ -19,7 +19,8 @@ class Server:
     def __init__(self, peers):
         self.colorKeys = list(colors.keys())[:-1]
         self.server = ''
-        self.port = settings.port
+        self.port = int(sys.argv[2])
+        print(colors['cyan']+'server open at localhost:'+str(self.port))
         self.peers = peers
         self.chats = ''
 
@@ -44,20 +45,24 @@ class Server:
         return col
 
     def acceptRequest(self):
-        self.connections = {}
-        c = 0
-        while True:
-            c += 1
-            print(colors['yellow']+f'[{c}] Waiting'+colors['white'])
-            # accept client request
-            conn,addr = self.socket.accept()
-            mycolor = self.getColor()
-            conn.send(pickle.dumps(mycolor))
-            uname = pickle.loads(conn.recv(2048))
-            self.connections[conn] = [addr,True,uname]
-            self.broadcast(colors['green']+f'{addr} {colors["white"]}joined the chat as {colors[mycolor]}[{uname}]'+colors['white'],None)
-            # start a new client thread with conn obtained
-            _thread.start_new_thread(self.clientThread,(conn,mycolor))
+        try:
+            self.connections = {}
+            c = 0
+            while True:
+                c += 1
+                print(colors['yellow']+f'[{c}] Waiting'+colors['white'])
+                # accept client request
+                conn,addr = self.socket.accept()
+                mycolor = self.getColor()
+                conn.send(pickle.dumps(mycolor))
+                uname = pickle.loads(conn.recv(2048))
+                self.connections[conn] = [addr,True,uname]
+                self.broadcast(colors['green']+f'{addr} {colors["white"]}joined the chat as {colors[mycolor]}[{uname}]'+colors['white'],None)
+                # start a new client thread with conn obtained
+                _thread.start_new_thread(self.clientThread,(conn,mycolor))
+        except:
+            self.closeClient(self.socket)
+
 
     def clientThread(self,conn,mycolor):
         # mainloop
@@ -94,4 +99,4 @@ class Server:
                     continue
 
 if __name__ == "__main__":
-    Server(int(sys.argv[1]))
+        serv = Server(int(sys.argv[1]))

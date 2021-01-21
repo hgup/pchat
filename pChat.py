@@ -37,7 +37,7 @@ class app:
     def connect(self,uname):
         # connect self to self.addr
         self.socket.connect(self.addr)
-        self.color = pickle.loads(self.socket.recv(2048))
+        self.color = pickle.loads(self.socket.recv(32))
         self.socket.send(pickle.dumps(uname))
 
     def logo(self):
@@ -74,7 +74,11 @@ class app:
                     sys.stdout.write('\033[A')
                     sys.stdout.write(colors[self.color]+'[You]: '+colors['white']+str(messege)+'\n')
                     sys.stdout.flush()
-                    self.socket.send(pickle.dumps(messege))
+                    try:
+                        self.socket.send(pickle.dumps(messege))
+                    except:
+                        print(colors['red']+'SERVER CLOSED!')
+                        run = False
 
 if __name__ == "__main__":
     app()
