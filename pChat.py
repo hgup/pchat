@@ -1,5 +1,6 @@
 import select
 import sys
+import os
 import pickle
 import socket
 import settings
@@ -65,7 +66,13 @@ class app:
 
             for inputs in readable:
                 if inputs == self.socket:
-                    msg = pickle.loads(self.socket.recv(2048))
+                    try:
+                        msg = pickle.loads(self.socket.recv(2048))
+                    except:
+                        print(colors['red']+'SERVER CLOSED!')
+                        self.socket.close()
+                        run = False
+                        break
                     print(msg)
                 elif inputs == sys.stdin:
                     messege =  sys.stdin.readline().strip()
@@ -74,11 +81,9 @@ class app:
                     sys.stdout.write('\033[A')
                     sys.stdout.write(colors[self.color]+'[You]: '+colors['white']+str(messege)+'\n')
                     sys.stdout.flush()
-                    try:
-                        self.socket.send(pickle.dumps(messege))
-                    except:
-                        print(colors['red']+'SERVER CLOSED!')
-                        run = False
+                    self.socket.send(pickle.dumps(messege))
 
 if __name__ == "__main__":
+    os.system('clear')
+    print("\x1B[31;40m")
     app()

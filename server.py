@@ -3,7 +3,9 @@ import _thread
 import pickle
 import settings
 import sys
+import os
 import random
+import select
 
 colors = {
     'red': "\u001b[31m",
@@ -13,7 +15,6 @@ colors = {
     'cyan': "\u001b[36m",
     'white': "\u001b[37m",
 }
-
 class Server:
 
     def __init__(self, peers):
@@ -25,6 +26,7 @@ class Server:
         self.chats = ''
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server_ip = socket.gethostbyname(self.server)
         self.bind()
 
@@ -40,7 +42,7 @@ class Server:
     def getColor(self):
         col = random.choice(self.colorKeys)
         self.colorKeys.remove(col)
-        if not self.colorKeys:
+        if self.colorKeys == []:
             self.colorKeys = list(colors.keys())[:-1]
         return col
 
@@ -48,6 +50,7 @@ class Server:
         try:
             self.connections = {}
             c = 0
+            _thread.start_new_thread(self.serverThread,())
             while True:
                 c += 1
                 print(colors['yellow']+f'[{c}] Waiting'+colors['white'])
@@ -63,6 +66,36 @@ class Server:
         except:
             self.closeClient(self.socket)
 
+    def serverThread(self):
+        run = True
+        self.color = 'white'
+        while run:
+            input_streams = [sys.stdin]
+            readable, writable, exceptional = select.select(input_streams,[],[])
+
+            for inputs in readable:
+                messege =  sys.stdin.readline().strip()
+                if messege == '/exit':
+                    run = False
+                if messege.startswith('/remove'):
+                    removeUser = messege.split(' ')[1]
+                    try:
+                        for conn in self.connections:
+                            if self.connections[conn][2] == removeUser:
+                                conn.send(pickle.dumps(colors['red']+'YOU WERE REMOVED BY SERVER!'))
+                                self.closeClient(conn)
+                                self.broadcast(colors['red']+removeUser+' was kicked out by SERVER',None)
+                    except:
+                        print(removeUser,"NOT FOUND")
+                sys.stdout.write('\033[A')
+                sys.stdout.write(colors[self.color]+'[SERVER]: '+colors['white']+str(messege)+'\n')
+                sys.stdout.flush()
+        for conn in self.connections:
+            print(conn)
+            self.closeClient(conn)
+            self.connections[conn][1] = False
+        self.closeClient(self.socket)
+
 
     def clientThread(self,conn,mycolor):
         # mainloop
@@ -70,9 +103,9 @@ class Server:
         self.mainloop(conn,mycolor)
         # close connection
         self.broadcast(colors['red']+f'{user} left the chat'+colors['white'],None)
+        self.closeClient(conn)
 
-    def closeClient(conn):
-        conn.shutdown(socket.SHUT_RDWR)
+    def closeClient(self,conn):
         conn.close()
 
     def mainloop(self,conn,mycolor):
@@ -99,4 +132,6 @@ class Server:
                     continue
 
 if __name__ == "__main__":
+        os.system('clear')
+        print("\x1B[31;40m")
         serv = Server(int(sys.argv[1]))
